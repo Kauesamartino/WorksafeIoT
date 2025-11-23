@@ -24,10 +24,10 @@ const char* password = "";
 
 // Configuração ThingSpeak
 WiFiClient client;
-unsigned long channelID = 3177659; // Substitua pelo seu Channel ID
-const char* writeAPIKey = "4IX3N1WB3ND37EX0"; // Substitua pela sua Write API Key
+unsigned long channelID = SEU_CHANNEL_ID; // Substitua pelo seu Channel ID
+const char* writeAPIKey = "SUA_WRITE_API_KEY"; // Substitua pela sua Write API Key
 
-// Objetos
+
 DHT dht(DHTPIN, DHTTYPE);
 
 // Variáveis
@@ -111,5 +111,6 @@ void loop() {
     Serial.println(status);
   }
 
-  delay(20000); // Respeita limite ThingSpeak
+  // Respeita limite ThingSpeak
+  delay(20000); 
 }
