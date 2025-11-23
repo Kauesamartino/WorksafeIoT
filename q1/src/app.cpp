@@ -1,3 +1,9 @@
+/*
+ Kaue Vinicius Samartino da Silva - 559317
+ João dos Santos Cardoso de Jesus - 560400
+ Davi Praxedes Santos Silva - 560719
+*/
+
 #include <WiFi.h>
 #include <ThingSpeak.h>
 #include <DHT.h>
@@ -13,13 +19,13 @@
 #define LED_ALERT 15
 
 // Config Wi-Fi
-const char* ssid = "Apto_43";
-const char* password = "antonio123";
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
 
 // Configuração ThingSpeak
 WiFiClient client;
-unsigned long channelID = 2914617; // Substitua pelo seu Channel ID
-const char* writeAPIKey = "RS4M831VOKQYTRL2"; // Substitua pela sua Write API Key
+unsigned long channelID = 3177659; // Substitua pelo seu Channel ID
+const char* writeAPIKey = "4IX3N1WB3ND37EX0"; // Substitua pela sua Write API Key
 
 // Objetos
 DHT dht(DHTPIN, DHTTYPE);
