@@ -67,7 +67,7 @@ void loop() {
   // Leitura dos sensores
   temperatura = dht.readTemperature();
   umidade = dht.readHumidity();
-  batimento_simulado = analogRead(POTPIN);
+  batimento_simulado = map(analogRead(POTPIN), 0, 4095, 40, 180);
   luminosidade = analogRead(LDRPIN);
 
   // Botões toggle
@@ -88,7 +88,7 @@ void loop() {
   lastPauseBtn = currentPauseBtn;
 
   // LED alerta
-  if (temperatura > 28 || umidade < 35 || moodState || pauseState || batimento_simulado > 2000) {
+  if (temperatura > 28 || umidade < 35 || moodState || pauseState || batimento_simulado > 120) {
     digitalWrite(LED_ALERT, HIGH);
   } else {
     digitalWrite(LED_ALERT, LOW);

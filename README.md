@@ -68,22 +68,21 @@ const char* writeAPIKey = "SUA_WRITE_API_KEY"; // Substitua pela sua Write API K
 
 ### Passo 3: Executar no Wokwi
 
-#### Opção A: Usar o Projeto Existente
+#### Opção A: Criação Manual (Recomendado)
 1. Acesse [Wokwi](https://wokwi.com)
 2. Clique em "New Project" → "ESP32"
-3. Copie o conteúdo do arquivo `app.cpp` para o editor
-4. Copie o conteúdo do arquivo `diagram.json` e cole no editor de diagrama (aba "diagram.json")
+3. Substitua o conteúdo do arquivo `sketch.ino` pelo código do arquivo `q1/src/app.cpp`
+4. Clique na aba "diagram.json" e substitua todo o conteúdo pelo conteúdo do arquivo `q1/diagram.json`
 5. Clique em "Start Simulation"
 
-#### Opção B: Importar o Projeto
-1. No Wokwi, use a opção "Import" e carregue os arquivos do projeto
-2. Ajuste as configurações se necessário
-3. Inicie a simulação
+#### Opção B: Link Direto do Projeto
+- Acesse o projeto diretamente pelo link: [WorkSafe IoT no Wokwi](https://wokwi.com/projects/441118680676072449)
+- **Nota**: Para projetos privados, você precisará criar manualmente usando a Opção A
 
 ### Passo 4: Interação com a Simulação
 
 #### Controles Disponíveis:
-- **Potenciômetro**: Gire para simular diferentes batimentos cardíacos (0-4095)
+- **Potenciômetro**: Gire para simular diferentes batimentos cardíacos (40-180 BPM)
 - **Sensor DHT22**: Simula temperatura e umidade ambiente
 - **LDR**: Simula diferentes condições de luminosidade
 - **Botão Verde (Mood)**: Alterna entre estado de bem-estar e alerta
@@ -95,7 +94,7 @@ const char* writeAPIKey = "SUA_WRITE_API_KEY"; // Substitua pela sua Write API K
   - Umidade < 35%
   - Estado de humor em alerta
   - Solicitação de pausa ativa
-  - Batimento simulado > 2000
+  - Batimento simulado > 120 BPM (taquicardia)
 
 ## 📊 Monitoramento dos Dados
 
@@ -119,7 +118,7 @@ const char* writeAPIKey = "SUA_WRITE_API_KEY"; // Substitua pela sua Write API K
 ### Thresholds de Alerta
 - **Temperatura**: > 28°C
 - **Umidade**: < 35%
-- **Batimento simulado**: > 2000
+- **Batimento simulado**: > 120 BPM (taquicardia)
 - **Mood/Pausa**: Estados ativos (1)
 
 ### Configurações de Rede
