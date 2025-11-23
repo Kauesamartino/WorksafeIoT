@@ -1,28 +1,64 @@
+#include <WiFi.h>
+#include <PubSubClient.h>
 #include <DHT.h>
+#include <ArduinoJson.h>
 
-// --- Mapeamento de Pinos ---
-#define DHT_PIN 12      // DHT22 Data
+// ---------- CONFIGURAÇÃO WIFI ----------
+const char* ssid = "SEU_WIFI";
+const char* password = "SUA_SENHA";
+
+// ---------- CONFIGURAÇÃO MQTT ----------
+const char* mqtt_server = "SEU_BROKER_MQTT"; // Ex: "192.168.1.100" ou IP do Mosquitto/Node-RED
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// ---------- MAPEAMENTO DE PINOS ----------
+#define DHT_PIN 12      
 #define DHT_TYPE DHT22
-#define POT_PIN 35      // Potentiometer
-#define LDR_PIN 34      // LDR (photoresistor)
-#define BTN_MOOD 5      // Button for mood
-#define BTN_PAUSE 4     // Button for pause
-#define LED_ALERT 15    // LED for alert
+#define POT_PIN 35      
+#define LDR_PIN 34      
+#define BTN_MOOD 5      
+#define BTN_PAUSE 4     
+#define LED_ALERT 15    
 
 DHT dht(DHT_PIN, DHT_TYPE);
 
-// --- Variáveis Globais ---
+// ---------- VARIÁVEIS GLOBAIS ----------
 float temperatura = 0;
 float umidade = 0;
 int batimento_simulado = 0;
 int luminosidade = 0;
-
-// Estado atual dos botões (toggle)
 bool moodState = false;
 bool pauseState = false;
-// Estado anterior para detectar borda
 bool lastMoodBtn = HIGH;
 bool lastPauseBtn = HIGH;
+
+// ---------- Funções de conexão ----------
+void setupWifi() {
+  delay(10);
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando ao WiFi ");
+  Serial.println(ssid);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi conectado!");
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Conectando ao MQTT...");
+    if (client.connect("ESP32Client")) {
+      Serial.println("conectado!");
+    } else {
+      Serial.print("falhou, rc=");
+      Serial.print(client.state());
+      Serial.println(" tentando novamente em 3 segundos.");
+      delay(3000);
+    }
+  }
+}
 
 void setup() {
   Serial.begin(9600);
@@ -30,21 +66,23 @@ void setup() {
   pinMode(BTN_PAUSE, INPUT_PULLUP);
   pinMode(LED_ALERT, OUTPUT);
   dht.begin();
+  setupWifi();
+  client.setServer(mqtt_server, 1883);
   Serial.println("Sistema Monitor de Bem-Estar iniciado.");
 }
 
 void loop() {
-  // Leitura dos sensores
+  if (!client.connected()) reconnect();
+  client.loop();
+
+  // ------ Leitura dos sensores ------
   temperatura = dht.readTemperature();
   umidade = dht.readHumidity();
   batimento_simulado = analogRead(POT_PIN);
   luminosidade = analogRead(LDR_PIN);
 
-  // Leitura atual dos botões
+  // ------ Botão Mood toggle ------
   bool currentMoodBtn = digitalRead(BTN_MOOD);
-  bool currentPauseBtn = digitalRead(BTN_PAUSE);
-
-  // Alterna o estado do Mood a cada clique
   if (lastMoodBtn == HIGH && currentMoodBtn == LOW) {
     moodState = !moodState;
     Serial.print("Mood alterado para: ");
@@ -52,7 +90,8 @@ void loop() {
   }
   lastMoodBtn = currentMoodBtn;
 
-  // Alterna o estado da Pausa a cada clique
+  // ------ Botão Pausa toggle ------
+  bool currentPauseBtn = digitalRead(BTN_PAUSE);
   if (lastPauseBtn == HIGH && currentPauseBtn == LOW) {
     pauseState = !pauseState;
     Serial.print("Pausa alterada para: ");
@@ -60,20 +99,27 @@ void loop() {
   }
   lastPauseBtn = currentPauseBtn;
 
-  // Lógica de alerta visual (LED acende em condição crítica)
+  // ------ LED alerta ------
   if (temperatura > 28 || umidade < 35 || moodState || pauseState || batimento_simulado > 2000) {
     digitalWrite(LED_ALERT, HIGH);
   } else {
     digitalWrite(LED_ALERT, LOW);
   }
 
-  // Exibição dos dados no Serial (para dashboard ou debug)
-  Serial.print("Temperatura: "); Serial.print(temperatura, 1); Serial.print(" C | ");
-  Serial.print("Umidade: "); Serial.print(umidade, 1); Serial.print("% | ");
-  Serial.print("Batimento (simulado): "); Serial.print(batimento_simulado); Serial.print(" | ");
-  Serial.print("Luminosidade: "); Serial.print(luminosidade); Serial.print(" | ");
-  Serial.print("Mood: "); Serial.print(moodState ? "Alerta" : "Bem-estar"); Serial.print(" | ");
-  Serial.print("Pausa?: "); Serial.println(pauseState ? "Sim" : "Não");
+  // ------ Monta e envia JSON via MQTT ------
+  StaticJsonDocument<256> doc;
+  doc["temperatura"] = temperatura;
+  doc["umidade"] = umidade;
+  doc["batimento"] = batimento_simulado;
+  doc["luminosidade"] = luminosidade;
+  doc["mood"] = moodState ? "Alerta" : "Bem-estar";
+  doc["pausa"] = pauseState ? "Sim" : "Não";
+  char payload[256];
+  serializeJson(doc, payload);
+  client.publish("worksafeiot/sensores", payload);
 
-  delay(1000); // Intervalo curto para resposta rápida ao clique
+  // ------ Debug Serial ------
+  Serial.println(payload);
+
+  delay(1000);
 }
